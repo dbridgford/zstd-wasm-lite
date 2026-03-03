@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>zstd-wasm-lite test</title></head>
+<body>
+<h2>zstd-wasm-lite test</h2>
+<pre id="output">Running...</pre>
+<script type="module">
+const { init, compress, decompress } = await import('./index.js?v=' + Date.now());
+
+const out = document.getElementById('output');
+function log(msg) { out.textContent += msg + '\n'; }
+
+try {
+  out.textContent = '';
+  log('Initializing WASM...');
+  await init();
+  log('OK\n');
+
+  // Test 1: compress a string
+  const text = 'Hello, zstd! '.repeat(1000);
+  const input = new TextEncoder().encode(text);
+  log(`Input: ${input.length} bytes`);
+
+  const t0 = performance.now();
+  const compressed = compress(input, 3);
+  const t1 = performance.now();
+  log(`Compressed: ${compressed.length} bytes (${(t1-t0).toFixed(1)}ms)`);
+  log(`Ratio: ${(input.length / compressed.length).toFixed(1)}x\n`);
+
+  // Test 2: decompress and verify roundtrip
+  const t2 = performance.now();
+  const decompressed = decompress(compressed);
+  const t3 = performance.now();
+  const output = new TextDecoder().decode(decompressed);
+  log(`Decompressed: ${decompressed.length} bytes (${(t3-t2).toFixed(1)}ms)`);
+  log(`Roundtrip OK: ${output === text}`);
+
+  // Test 3: larger data
+  log('\n--- Large data test ---');
+  const big = new Uint8Array(1024 * 1024); // 1MB of zeros
+  for (let i = 0; i < big.length; i++) big[i] = Math.random() * 256 | 0;
+  const t4 = performance.now();
+  const bigComp = compress(big, 3);
+  const t5 = performance.now();
+  const bigDecomp = decompress(bigComp);
+  const t6 = performance.now();
+  log(`1MB random: ${big.length} -> ${bigComp.length} bytes (${(t5-t4).toFixed(1)}ms compress, ${(t6-t5).toFixed(1)}ms decompress)`);
+  log(`Roundtrip OK: ${bigDecomp.length === big.length && bigDecomp.every((v, i) => v === big[i])}`);
+
+  log('\nAll tests passed!');
+} catch (e) {
+  log('ERROR: ' + e.message);
+  console.error(e);
+}
+</script>
+</body>
+</html>

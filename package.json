@@ -1,0 +1,16 @@
+{
+  "name": "@dbridgford/zstd-wasm-lite",
+  "version": "1.0.0",
+  "description": "Minimal WASM build of official facebook/zstd for browser compression",
+  "type": "module",
+  "main": "index.js",
+  "files": ["index.js", "lib/"],
+  "scripts": {
+    "build": "bash build.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dbridgford/zstd-wasm-lite"
+  },
+  "license": "BSD-3-Clause"
+}
